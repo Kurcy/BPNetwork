@@ -52,9 +52,7 @@ def sigmoid(x):
     return 1/(1 + math.exp(-x))
 
 def get_err(y, l):
-    tem_label = np.zeros(len(y))
-    tem_label[l] = 1
-    return 0.5*np.dot((y-tem_label), (y-tem_label))
+    return 0.5*np.dot((y-l), (y-l))
 
 
 ###################################################################################################
@@ -62,33 +60,27 @@ def get_err(y, l):
 # 训练
 ###################################################################################################
 test=0
-for count in range(0, 11):
+for count in range(0, 10000):
+    print 'Processing....'
+    print count
     hid_value = np.dot(sample[count], w1)       # 隐层值
     hid_act = get_act(hid_value)                # 隐层激活值
     out_value = np.dot(hid_act, w2)             # 输出层值
     out_act = get_act(out_value)                # 输出层激活值
-    err = get_err(out_act, label[count])        # 计算误差
-
+    t_label = np.zeros(out_num)
+    t_label[label[count]] = 1
+    err = get_err(out_act, t_label)        # 计算误差
+    print err
     if err <= err_th:
         print "Training finished, OK"
     else:
         for i in range(0, len(delta2)):
-            try:#错误原因，out_act是一个10维向量，而label[count]是一个数，需要把label[count]转换为与out_act类似的向量
-                delta2[i] = (label[count] - out_act[i]) * sigmoid(out_value[i]) * (1 - sigmoid(out_value[i]))        # 输出层delta
-                w2[:, i] = w2[:, i] - hid_lrate * delta2[i] * hid_act  # 更新隐层到输出层权向量
-
-            except IndexError:
-                print count
-                print '\n'
-                print np.shape(label)
-                print '\n'
-                print np.shape(out_act)
-                print '\n'
-
+            delta2[i] = (t_label[i] - out_act[i])# * sigmoid(out_value[i]) * (1 - sigmoid(out_value[i]))        # 输出层delta
+            w2[:, i] = w2[:, i] + hid_lrate * delta2[i] * hid_act  # 更新隐层到输出层权向量
 
         for j in range(0, len(delta1)):
             delta1[j] = sigmoid(hid_value[j]) * (1 - sigmoid(hid_value[j])) * np.dot(delta2, w2[j])  # 隐层delta
-            w1[:, j] = w1[:, j] - inp_lrate * delta1[j] * sample[j]  # 更新隐层到输出层权向量
+            w1[:, j] = w1[:, j] + inp_lrate * delta1[j] * sample[j]  # 更新隐层到输出层权向量
 ###################################################################################################
 
 # 输出网络
